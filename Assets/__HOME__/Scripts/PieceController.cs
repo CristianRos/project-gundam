@@ -4,7 +4,8 @@ using static IPiece;
 
 public class PieceController : MonoBehaviour, IPiece
 {
-	[SerializeField] private float _rotationSpeed = 10f;
+	[SerializeField] private float _rotationSpeed = 25f;
+	[SerializeField] private float _followSpeed = 25f;
 
 	private PieceStates _state = PieceStates.Free;
 
@@ -14,8 +15,9 @@ public class PieceController : MonoBehaviour, IPiece
 	public bool IsFixed => _state == PieceStates.Fixed;
 	public bool IsLocked => _state == PieceStates.Locked;
 
+	public Quaternion CurrentRotation => transform.rotation;
+
 	private Transform _followTarget = null;
-	public Transform FollowTarget => _followTarget;
 
 	private Rigidbody _rigidbody;
 	private Rigidbody _rigidbodyClone;
@@ -33,12 +35,21 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody = rigidbody;
 	}
 
-	void Update()
+	void FixedUpdate()
 	{
-		if (_state == PieceStates.Grabbed && _followTarget)
-		{
-			transform.position = _followTarget.transform.position;
-		}
+		if (_state != PieceStates.Grabbed) return;
+
+		// Follow position
+		Vector3 toTarget = _followTarget.position - _rigidbody.position;
+		_rigidbody.linearVelocity = toTarget * _followSpeed;
+
+		// Follow rotation
+		Quaternion deltaRot = _followTarget.rotation * Quaternion.Inverse(_rigidbody.rotation);
+		deltaRot.ToAngleAxis(out float angle, out Vector3 axis);
+		if (angle > 180f) angle -= 360f;
+
+		Vector3 angularVelocity = _rotationSpeed * angle * Mathf.Deg2Rad * axis;
+		_rigidbody.angularVelocity = angularVelocity;
 	}
 
 	public void Lock()
@@ -55,7 +66,7 @@ public class PieceController : MonoBehaviour, IPiece
 
 		_state = PieceStates.Grabbed;
 
-		_rigidbody.isKinematic = true;
+		// _rigidbody.isKinematic = true;
 		_rigidbody.useGravity = false;
 
 		_followTarget = target;
@@ -112,12 +123,6 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody = gameObject.AddComponent<Rigidbody>();
 		JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(_rigidbodyClone), _rigidbody);
 		_rigidbodyClone = null;
-	}
-
-	public void Rotate(Vector2 delta)
-	{
-		(delta.y, delta.x) = (-delta.x, delta.y);
-		transform.localRotation *= Quaternion.Euler(delta * _rotationSpeed);
 	}
 
 	public void SetSnapZone(SnapZone zone)

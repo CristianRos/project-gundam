@@ -10,16 +10,15 @@ public interface IPiece
 	bool IsLocked { get; }
 	bool IsFixed { get; }
 
+	Quaternion CurrentRotation { get; }
+
 	IPiece ParentPiece { get; }
-	Transform FollowTarget { get; }
 
 	void Lock();
 	void TryStartFollow(Transform target);
 	void StopFollow();
 	void TrySnap();
 	void Detach();
-
-	void Rotate(Vector2 delta);
 
 	void SetSnapZone(SnapZone zone);
 	void RemoveSnapZone();
