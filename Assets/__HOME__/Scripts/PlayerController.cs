@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
 
 
 		TryGrabPiece();
+		TrySnapPiece();
 		TryDropPiece();
 	}
 
@@ -48,7 +49,7 @@ public class PlayerController : MonoBehaviour
 
 		if (Keyboard.current.rKey.isPressed)
 		{
-			_grabbedPiece.FixedRotate(Mouse.current.delta.value);
+			_grabbedPiece.Rotate(Mouse.current.delta.value);
 		}
 	}
 
@@ -85,17 +86,27 @@ public class PlayerController : MonoBehaviour
 
 	void TryGrabPiece()
 	{
-		if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 10f))
-		{
-			Debug.DrawLine(transform.position, hit.point, Color.green);
+		Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 10f);
+		if (hit.collider == null) return;
 
-			var piece = hit.collider.GetComponentInParent<IPiece>();
-			if (piece != null && Mouse.current.leftButton.wasPressedThisFrame)
-			{
-				_grabbedPiece = piece;
-				_grabbedPiece.StartFollow(distancePoint.transform);
-			}
-		}
+		Debug.DrawLine(transform.position, hit.point, Color.green);
+
+		var piece = hit.collider.GetComponentInParent<IPiece>();
+		if (piece == null) return;
+
+		while (piece.ParentPiece != null) piece = piece.ParentPiece;
+
+		if (!Mouse.current.leftButton.wasPressedThisFrame || piece.State != IPiece.PieceStates.Free)
+			return;
+
+		_grabbedPiece = piece;
+		_grabbedPiece.TryStartFollow(distancePoint.transform);
+	}
+
+	void TrySnapPiece()
+	{
+		if (_grabbedPiece != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+			_grabbedPiece.TrySnap();
 	}
 
 	void TryDropPiece()

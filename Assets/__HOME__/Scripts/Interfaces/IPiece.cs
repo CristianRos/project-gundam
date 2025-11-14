@@ -10,13 +10,17 @@ public interface IPiece
 	bool IsLocked { get; }
 	bool IsFixed { get; }
 
+	IPiece ParentPiece { get; }
 	Transform FollowTarget { get; }
 
 	void Lock();
-	void StartFollow(Transform target);
+	void TryStartFollow(Transform target);
 	void StopFollow();
-	void SnapTo(Transform joint, Vector3 position = default, Vector3 eulerRotation = default);
+	void TrySnap();
 	void Detach();
 
-	void FixedRotate(Vector2 delta);
+	void Rotate(Vector2 delta);
+
+	void SetSnapZone(SnapZone zone);
+	void RemoveSnapZone();
 }
