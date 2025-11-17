@@ -18,6 +18,7 @@ public class PieceController : MonoBehaviour, IPiece
 	public Quaternion CurrentRotation => transform.rotation;
 
 	private Transform _followTarget = null;
+	private Transform _followRotator = null;
 
 	private Rigidbody _rigidbody;
 	private Rigidbody _rigidbodyClone;
@@ -26,6 +27,8 @@ public class PieceController : MonoBehaviour, IPiece
 
 	private IPiece _parentPiece = null;
 	public IPiece ParentPiece => _parentPiece;
+
+	public GameObject GameObject => gameObject;
 
 
 	void Awake()
@@ -44,7 +47,7 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody.linearVelocity = toTarget * _followSpeed;
 
 		// Follow rotation
-		Quaternion deltaRot = _followTarget.rotation * Quaternion.Inverse(_rigidbody.rotation);
+		Quaternion deltaRot = _followRotator.rotation * Quaternion.Inverse(_rigidbody.rotation);
 		deltaRot.ToAngleAxis(out float angle, out Vector3 axis);
 		if (angle > 180f) angle -= 360f;
 
@@ -60,7 +63,7 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody.useGravity = false;
 	}
 
-	public void TryStartFollow(Transform target)
+	public void TryStartFollow(Transform target, Transform rotator)
 	{
 		if (_state != PieceStates.Free || !_rigidbody) return;
 
@@ -70,6 +73,7 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody.useGravity = false;
 
 		_followTarget = target;
+		_followRotator = rotator;
 	}
 
 	public void StopFollow()

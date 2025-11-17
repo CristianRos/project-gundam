@@ -13,9 +13,10 @@ public interface IPiece
 	Quaternion CurrentRotation { get; }
 
 	IPiece ParentPiece { get; }
+	GameObject GameObject { get; }
 
 	void Lock();
-	void TryStartFollow(Transform target);
+	void TryStartFollow(Transform target, Transform rotator);
 	void StopFollow();
 	void TrySnap();
 	void Detach();
