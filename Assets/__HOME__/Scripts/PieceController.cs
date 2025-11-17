@@ -17,8 +17,8 @@ public class PieceController : MonoBehaviour, IPiece
 
 	public Quaternion CurrentRotation => transform.rotation;
 
-	private Transform _followTarget = null;
-	private Transform _followRotator = null;
+	private Transform _grabAnchor = null;
+	private Transform _rotator = null;
 
 	private Rigidbody _rigidbody;
 	private Rigidbody _rigidbodyClone;
@@ -43,11 +43,11 @@ public class PieceController : MonoBehaviour, IPiece
 		if (_state != PieceStates.Grabbed) return;
 
 		// Follow position
-		Vector3 toTarget = _followTarget.position - _rigidbody.position;
+		Vector3 toTarget = _grabAnchor.position - _rigidbody.position;
 		_rigidbody.linearVelocity = toTarget * _followSpeed;
 
 		// Follow rotation
-		Quaternion deltaRot = _followRotator.rotation * Quaternion.Inverse(_rigidbody.rotation);
+		Quaternion deltaRot = _rotator.rotation * Quaternion.Inverse(_rigidbody.rotation);
 		deltaRot.ToAngleAxis(out float angle, out Vector3 axis);
 		if (angle > 180f) angle -= 360f;
 
@@ -72,8 +72,8 @@ public class PieceController : MonoBehaviour, IPiece
 		// _rigidbody.isKinematic = true;
 		_rigidbody.useGravity = false;
 
-		_followTarget = target;
-		_followRotator = rotator;
+		_grabAnchor = target;
+		_rotator = rotator;
 	}
 
 	public void StopFollow()
@@ -85,7 +85,10 @@ public class PieceController : MonoBehaviour, IPiece
 		_rigidbody.isKinematic = false;
 		_rigidbody.useGravity = true;
 
-		_followTarget = null;
+		_grabAnchor.transform.localPosition = Vector3.forward;
+
+		_grabAnchor = null;
+		_rotator = null;
 	}
 
 	public void TrySnap()
@@ -101,6 +104,11 @@ public class PieceController : MonoBehaviour, IPiece
 		transform.parent = _snapZone.GetJoint();
 		transform.SetLocalPositionAndRotation(_snapZone.GetJointPosition(), Quaternion.Euler(_snapZone.GetJointRotation()));
 		_parentPiece = transform.parent.GetComponent<IPiece>();
+
+		_grabAnchor.transform.localPosition = Vector3.forward;
+
+		_grabAnchor = null;
+		_rotator = null;
 	}
 
 	public void Detach()
